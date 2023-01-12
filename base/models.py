@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
-from phonenumber_field.modelfields import PhoneNumberField
 
 # Create your models here.
 class UserManager(BaseUserManager):
@@ -54,15 +53,3 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='profiles/')
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    birth_date = models.DateField(null=True)
-    phone_number = PhoneNumberField(null=True, unique=True)
-    github_link = models.URLField()
-    linkedin_link = models.URLField()
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.user.email})"
