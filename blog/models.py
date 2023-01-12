@@ -41,13 +41,13 @@ class Comment(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='profiles/')
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='profiles/', null=True, blank=True)
+    first_name = models.CharField(max_length=100, null=True, blank=True)
+    last_name = models.CharField(max_length=100, null=True, blank=True)
     birth_date = models.DateField(null=True)
-    phone_number = PhoneNumberField(null=True, unique=True)
-    github_link = models.URLField()
-    linkedin_link = models.URLField()
+    phone_number = PhoneNumberField(null=True, blank=True, unique=True)
+    github_link = models.URLField(null=True, blank=True)
+    linkedin_link = models.URLField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.user.email})"

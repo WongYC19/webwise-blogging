@@ -1,9 +1,14 @@
 from rest_framework import serializers
-from .models import Post, Comment
+from .models import Post, Comment, Profile
 from likes.models import Like
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['id', 'user', 'image', 'first_name', 'last_name', 'birth_date', 'phone_number', 'github_link', 'linkedin_link']
 
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -38,7 +43,7 @@ class PostSerializer(serializers.ModelSerializer):
     likes = serializers.SerializerMethodField()
 
     def get_likes(self, instance):
-        
+
         likes_count = Like.objects.get_likes_count(instance, instance.pk)
         print(f"Likes count: {likes_count}")
         return likes_count

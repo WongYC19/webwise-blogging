@@ -37,7 +37,6 @@ class UserManager(BaseUserManager):
 
         return self._create_user(email, password, **extra_fields)
 
-
 class User(AbstractUser):
     # https://www.fomfus.com/articles/how-to-use-email-as-username-for-django-authentication-removing-the-username/
     username = None
