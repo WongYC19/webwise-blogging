@@ -12,8 +12,8 @@ class Post(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     author = models.ForeignKey(User, on_delete=models.PROTECT, related_name='posts')
     title = models.CharField(max_length=200, null=False)
-    slug = models.SlugField(unique=True, editable=False)
-    content = models.TextField(null=True)
+    slug = models.SlugField(unique=True, editable=False, max_length=255)
+    content = models.TextField(null=False, blank=False)
     created_date = models.DateTimeField(auto_now_add=True, editable=False)
     modified_date = models.DateTimeField(auto_now=True, editable=False)
     is_published = models.BooleanField(default=False)
@@ -28,7 +28,7 @@ class Post(models.Model):
 
 class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments', related_query_name='comment')
     content = models.TextField()
     created_date = models.DateTimeField(auto_now_add=True, editable=False)
     modified_date = models.DateTimeField(auto_now=True, editable=False)
