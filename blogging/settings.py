@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # Installed application
     'rest_framework',
     'djoser',
+    'drf_yasg',
 
     # Custom Application
     'base',
@@ -50,7 +51,11 @@ INSTALLED_APPS = [
     'likes',
 ]
 
+if DEBUG:
+    INSTALLED_APPS += ["debug_toolbar"]
+
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -133,6 +138,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+INTERNAL_IPS = ["127.0.0.1"]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
@@ -152,7 +159,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
@@ -183,6 +190,47 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
-# DJOSER = {
-#     'user': 'myapp.serializers.SpecialUserSerializer',
-# }
+DJOSER = {
+    'activation': 'djoser.serializers.ActivationSerializer',
+    'password_reset': 'djoser.serializers.SendEmailResetSerializer',
+    'password_reset_confirm': 'djoser.serializers.PasswordResetConfirmSerializer',
+    'password_reset_confirm_retype': 'djoser.serializers.PasswordResetConfirmRetypeSerializer',
+    'set_password': 'djoser.serializers.SetPasswordSerializer',
+    'set_password_retype': 'djoser.serializers.SetPasswordRetypeSerializer',
+    'set_username': 'djoser.serializers.SetUsernameSerializer',
+    'set_username_retype': 'djoser.serializers.SetUsernameRetypeSerializer',
+    'username_reset': 'djoser.serializers.SendEmailResetSerializer',
+    'username_reset_confirm': 'djoser.serializers.UsernameResetConfirmSerializer',
+    'username_reset_confirm_retype': 'djoser.serializers.UsernameResetConfirmRetypeSerializer',
+    'user_create': 'djoser.serializers.UserCreateSerializer',
+    'user_create_password_retype': 'djoser.serializers.UserCreatePasswordRetypeSerializer',
+    'user_delete': 'djoser.serializers.UserDeleteSerializer',
+    'user': 'djoser.serializers.UserSerializer',
+    'current_user': 'djoser.serializers.UserSerializer',
+    'token': 'djoser.serializers.TokenSerializer',
+    'token_create': 'djoser.serializers.TokenCreateSerializer',
+}
+
+SWAGGER_SETTINGS = {
+
+   'DEFAULT_AUTHENTICATION_CLASSES': [
+       'rest_framework_simplejwt.authentication.JWTAuthentication'
+    ],
+
+    # Remove the django login and logout button from swagger documentation
+    'USE_SESSION_AUTH': False,
+
+
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            "type": "apiKey",
+            'in': 'header',
+            'name': 'Authorization',
+            "scheme": "Bearer",
+            "bearerFormat": "JWT",
+        },
+    },
+
+
+
+}
