@@ -3,269 +3,93 @@ from rest_framework import status
 from model_bakery import baker
 
 @pytest.mark.django_db(transaction=False)
-class TestCreatePost:
-    def test_if_anonymous_user_create_private_post_returns_401(self, user_data, create_post):
-        user = user_data(None)
-
-        response = create_post(user, is_published=False)
-
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    def test_if_anonymous_user_create_public_post_returns_401(self, user_data, create_post):
-        user = user_data(None)
-
-        response = create_post(user, is_published=True)
-
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    def test_if_normal_user_create_private_post_returns_403(self, user_data, create_post):
-        user = user_data(False)
-
-        response = create_post(user, is_published=False)
-
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    def test_if_normal_user_create_public_post_returns_403(self, user_data, create_post):
-        user = user_data(False)
-
-        response = create_post(user, is_published=True)
-
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    def test_if_admin_create_private_post_returns_201(self, user_data, create_post):
-        user = user_data(True)
-
-        response = create_post(user, is_published=False)
-
-        assert response.status_code == status.HTTP_201_CREATED
-
-    def test_if_admin_create_public_post_returns_201(self, user_data, create_post):
-        user = user_data(True)
-
-        response = create_post(user, is_published=True)
-
-        assert response.status_code == status.HTTP_201_CREATED
-
-    def test_if_title_empty_returns_returns_400(self, user_data, create_post):
-        user = user_data(True)
-
-        response = create_post(user, title="")
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-    def test_if_content_empty_returns_returns_400(self, user_data, create_post):
-        user = user_data(True)
-
-        response = create_post(user, content="")
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-    def test_if_is_published_empty_returns_201(self, user_data, create_post):
-        user = user_data(True)
-
-        response = create_post(user)
-
-        assert response.status_code == status.HTTP_201_CREATED
-
-@pytest.mark.django_db(transaction=False)
-class TestRetrievePost:
-
-    def test_if_admin_get_private_post_return_200(self, user_data, create_post, get_post):
-        user = user_data(True)
-        post_response = create_post(user, is_published=False)
-
-        new_post_id = post_response.data['pk']
-        response = get_post(user, new_post_id)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data['pk'] == new_post_id
-
-    def test_if_admin_get_public_post_return_200(self, user_data, create_post, get_post):
-        user = user_data(True)
-        post_response = create_post(user, is_published=False)
-
-        new_post_id = post_response.data['pk']
-        response = get_post(user, new_post_id)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data['pk'] == new_post_id
-
-    def test_if_normal_user_get_private_post_return_404(self, user_data, create_post, get_post):
-        user = user_data(False)
-        admin = user_data(True)
-
-        post_response = create_post(admin, is_published=False)
-        new_post_id = post_response.data['pk']
-
-        response = get_post(user, new_post_id)
-
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-
-    def test_if_normal_user_get_public_post_return_200(self, user_data, create_post, get_post):
-        user = user_data(False)
-        admin = user_data(True)
-
-        post_response = create_post(admin, is_published=True)
-        new_post_id = post_response.data['pk']
-
-        response = get_post(user, new_post_id)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data['pk'] == new_post_id
-
-    def test_if_anonymous_get_private_post_return_404(self, user_data, create_post, get_post):
-        user = user_data(None)
-        admin = user_data(True)
-
-        post_response = create_post(admin, is_published=False)
-        new_post_id = post_response.data['pk']
-
-        response = get_post(user, new_post_id)
-
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-
-    def test_if_anonymous_get_public_post_return_200(self, user_data, create_post, get_post):
-        user = user_data(None)
-        admin = user_data(True)
-
-        post_response = create_post(admin, is_published=True)
-        new_post_id = post_response.data['pk']
-
-        response = get_post(user, new_post_id)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data['pk'] == new_post_id
-
-@pytest.mark.django_db(transaction=False)
-class TestListPost:
-
-    def test_if_admin_get_new_private_post_return_larger_list(self, user_data, create_post, get_posts):
-        user = user_data(True)
-        list_response = get_posts(user)
-        ori_post_numbers = len(list_response.data)
-        create_post(user, is_published=False)
-
-        response = get_posts(user)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == ori_post_numbers + 1
-
-    def test_if_admin_get_new_public_post_return_larger_list(self, user_data, create_post, get_posts):
-        user = user_data(True)
-        list_response = get_posts(user)
-        ori_post_numbers = len(list_response.data)
-        create_post(user, is_published=True)
-
-        response = get_posts(user)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == ori_post_numbers + 1
-
-    def test_if_normal_user_get_new_private_post_return_same_list(self, user_data, create_post, get_posts):
-        user = user_data(False)
-        admin = user_data(True)
-        list_response = get_posts(user)
-        ori_post_numbers = len(list_response.data)
-        create_post(admin, is_published=False)
-
-        response = get_posts(user)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == ori_post_numbers
-
-    def test_if_normal_user_get_new_public_post_return_larger_list(self, user_data, create_post, get_posts):
-        user = user_data(False)
-        admin = user_data(True)
-        list_response = get_posts(user)
-        ori_post_numbers = len(list_response.data)
-        create_post(admin, is_published=True)
-
-        response = get_posts(user)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == ori_post_numbers + 1
-
-    def test_if_anonymous_user_get_new_private_post_return_larger_list(self, user_data, create_post, get_posts):
-        user = user_data(None)
-        admin = user_data(True)
-        list_response = get_posts(user)
-        ori_post_numbers = len(list_response.data)
-        create_post(admin, is_published=False)
-
-        response = get_posts(user)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == ori_post_numbers
-
-    def test_if_anonymous_user_get_new_public_post_return_larger_list(self, user_data, create_post, get_posts):
-        user = user_data(None)
-        admin = user_data(True)
-        list_response = get_posts(user)
-        ori_post_numbers = len(list_response.data)
-        create_post(admin, is_published=True)
-
-        response = get_posts(user)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) == ori_post_numbers + 1
-
-@pytest.mark.django_db(transaction=False)
-class TestDeletePost:
-
-    def test_if_admin_delete_private_post_return_204(self, user_data, create_post, delete_post):
-        user = user_data(True)
-
-        post_response = create_post(user, is_published=False)
-        post_id = post_response.data['pk']
-
-        response = delete_post(user, post_id)
-        assert response.status_code == status.HTTP_204_NO_CONTENT
-
-    def test_if_admin_delete_public_post_return_204(self, user_data, create_post, delete_post):
-        user = user_data(True)
-        post_response = create_post(user, is_published=True)
-        post_id = post_response.data['pk']
-
-        response = delete_post(user, post_id)
-
-        assert response.status_code == status.HTTP_204_NO_CONTENT
-
-    def test_if_normal_user_delete_private_post_return_403(self, user_data, create_post, delete_post):
-        user = user_data(False)
-        admin = user_data(True)
-        post_response = create_post(admin, is_published=False)
-        post_id = post_response.data['pk']
-
-        response = delete_post(user, post_id)
-
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    def test_if_normal_user_delete_public_post_return_403(self, user_data, create_post, delete_post):
-        user = user_data(False)
-        admin = user_data(True)
-        post_response = create_post(admin, is_published=True)
-        post_id = post_response.data['pk']
-
-        response = delete_post(user, post_id)
-
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    def test_if_anonymous_user_delete_private_post_return_401(self, user_data, create_post, delete_post):
-        user = user_data(None)
-        admin = user_data(True)
-        post_response = create_post(admin, is_published=False)
-        post_id = post_response.data['pk']
-
-        response = delete_post(user, post_id)
-
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    def test_if_anonymous_user_delete_public_post_return_403(self, user_data, create_post, delete_post):
-        user = user_data(None)
-        admin = user_data(True)
-        post_response = create_post(admin, is_published=True)
-        post_id = post_response.data['pk']
-
-        response = delete_post(user, post_id)
-
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+class TestPost:
+
+    @pytest.mark.parametrize("user_type, is_published, status_code", [
+        ('superuser', False, 201),
+        ('normal_user', False, 403),
+        ('anonymous_user', False, 401),
+        ('superuser', True, 201),
+        ('normal_user', True, 403),
+        ('anonymous_user', True, 401),
+    ])
+    def test_if_user_create_post(self, create_post, user_type, is_published, status_code):
+        response = create_post(user_type, is_published=is_published)
+
+        assert response.status_code == status_code
+
+    @pytest.mark.parametrize("user_type, title, content, post_type, status_code", [
+        ('superuser', None, None, "private", 200),
+        ('normal_user', None, None, "private", 403),
+        ('anonymous_user', None, None, "private", 401),
+        ('superuser', "", None, "private", 400),
+        ('superuser', None, "", "private", 400),
+        ('superuser', None, None, "public", 200),
+        ('normal_user', None, None, "public", 403),
+        ('anonymous_user', None, None, "public", 401),
+        ('superuser', "", None, "public", 400),
+        ('superuser', None, "", "public", 400),
+    ])
+    def test_if_user_edit_post(self, edit_post, user_type, post_type, title, content, status_code):
+        response = edit_post(user_type, post_type, title, content)
+
+        assert response.status_code == status_code
+
+    @pytest.mark.parametrize("title, content, is_published, status_code", [
+        ("", None, True, 400),
+        ("", None, False, 400),
+        (None, "", True, 400),
+        (None, "", False, 400),
+        ("22", None, True, 400),
+        ("22", None, False, 400),
+        (None, "22", True, 400),
+        (None, "22", False, 400),
+        (None, None, True, 201),
+        (None, None, False, 201),
+    ])
+    def test_invalid_values_create_post(self, create_post, title, content, is_published, status_code):
+        response = create_post("superuser", title, content, is_published)
+
+        assert response.status_code == status_code
+
+    @pytest.mark.parametrize("user_type, status_code, size", [
+        ('superuser', 200, 2),
+        ('normal_user', 200, 1),
+        ('anonymous_user', 200, 1),
+    ])
+    def test_if_user_list_posts(self, get_posts, user_type, status_code, size):
+        response = get_posts(user_type)
+
+        assert response.status_code == status_code
+        print(response.json())
+        assert len(response.data) == size
+
+    @pytest.mark.parametrize("user_type, status_code, post_type", [
+        ('superuser', 200, 'private'),
+        ('normal_user', 404, 'private'),
+        ('anonymous_user', 404, 'private'),
+        ('superuser', 200, 'public'),
+        ('normal_user', 200, 'public'),
+        ('anonymous_user', 200, 'public'),
+    ])
+    def test_if_user_retrieve_post(self, get_post, posts, user_type, status_code, post_type):
+        post = posts[post_type]
+
+        response = get_post(user_type, post.pk)
+
+        assert response.status_code == status_code
+
+    @pytest.mark.parametrize("user_type, status_code, post_type", [
+        ('superuser', 204, 'private'),
+        ('normal_user', 403, 'private'),
+        ('anonymous_user', 401, 'private'),
+        ('superuser', 204, 'public'),
+        ('normal_user', 403, 'public'),
+        ('anonymous_user', 401, 'public'),
+    ])
+    def test_if_user_delete_post(self, delete_post, posts, user_type, status_code, post_type):
+        post = posts[post_type]
+
+        response = delete_post(user_type, post.pk)
+
+        assert response.status_code == status_code

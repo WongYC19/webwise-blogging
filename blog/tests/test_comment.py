@@ -4,138 +4,64 @@ from rest_framework import status
 @pytest.mark.django_db(transaction=False)
 class TestComment:
 
-    def test_if_normal_user_comment_on_private_post_return_403(self, user_data, create_comment, comment_data):
-        user = user_data(False)
+    @pytest.mark.parametrize("user, is_published, status_code", [
+        ("anonymous_user", "private", 401),
+        ("normal_user", "private", 403),
+        ("superuser", "private", 201),
+        ("anonymous_user", "public", 401),
+        ("normal_user", "public", 201),
+        ("superuser", "public", 201),
+    ])
+    def test_if_user_comment_on_post(self, create_comment, user, is_published, status_code):
+        response = create_comment(user, is_published)
 
-        response = create_comment(user, is_published=False, content=comment_data)
+        assert response.status_code == status_code
 
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+    @pytest.mark.parametrize("user_type, comment_type, status_code", [
+        ("superuser", "super_private", 200),
+        ("normal_user", "normal_private", 403),
+        ("superuser", "super_public", 200),
+        ("normal_user", "normal_public", 200),
+        ("anonymous_user", "normal_public", 401),
+        ("anonymous_user", "super_public", 401),
+    ])
+    def test_if_user_edit_comment_on_post(self, user_type, edit_comment, comments, comment_type, status_code):
+        comment = comments[comment_type]
+        comment_id = comment.pk
+        post_id = comment.post.pk
 
-    def test_if_normal_user_comment_on_public_post_return_201(self, user_data, create_comment, comment_data):
-        user = user_data(False)
+        response = edit_comment(user_type, post_id, comment_id)
 
-        response = create_comment(user, is_published=True, content=comment_data)
+        assert response.status_code == status_code
 
-        assert response.status_code == status.HTTP_201_CREATED
-        assert response.data['content'] == comment_data
+    @pytest.mark.parametrize("user_type, comment_type, status_code", [
+        ("superuser", "super_private", 204),
+        ("normal_user", "normal_private", 403),
+        ("superuser", "super_public", 204),
+        ("normal_user", "normal_public", 204),
+        ("anonymous_user", "normal_public", 401),
+        ("anonymous_user", "super_public", 401),
+    ])
+    def test_if_user_delete_comment_on_post(self, delete_comment, user_type, comments, comment_type, status_code):
+        comment = comments[comment_type]
+        comment_id = comment.pk
+        post_id = comment.post.pk
 
-    def test_if_admin_create_comment_on_private_post_return_201(self, user_data, create_comment, comment_data):
-        user = user_data(True)
+        response = delete_comment(user_type, comment_id, post_id)
 
-        response = create_comment(user, is_published=False, content=comment_data)
+        assert response.status_code == status_code
 
-        assert response.status_code == status.HTTP_201_CREATED
-        assert response.data['content'] == comment_data
+    @pytest.mark.parametrize("user_type, post_type, status_code", [
+        ("superuser", "private", 200),
+        ("normal_user", "private", 403),
+        ("anonymous_user", "private", 401),
+        ("superuser", "public", 200),
+        ("normal_user", "public", 200),
+        ("anonymous_user", "public", 401),
+    ])
+    def test_if_user_read_comment_on_post(self, read_comments, posts, user_type, post_type, status_code):
+        post = posts[post_type]
 
-    def test_if_admin_create_comment_on_public_post_return_201(self, user_data, create_comment, comment_data):
-        user = user_data(True)
+        response = read_comments(user_type, post.pk)
 
-        response = create_comment(user, is_published=True, content=comment_data)
-
-        assert response.status_code == status.HTTP_201_CREATED
-        assert response.data['content'] == comment_data
-
-    def test_if_anonymous_user_create_comment_on_private_post_return_401(self, user_data, create_comment, comment_data):
-        user = user_data(None)
-
-        response = create_comment(user, is_published=False, content=comment_data)
-
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    def test_if_anonymous_user_create_comment_on_public_post_return_403(self, user_data, create_comment, comment_data):
-        user = user_data(None)
-
-        response = create_comment(user, is_published=True, content=comment_data)
-
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    def test_if_admin_edit_comment_on_private_post_return_200(self, user_data, edit_comment, comment_data):
-        user = user_data(True)
-
-        response = edit_comment(user, is_published=False, content=comment_data)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data['content'] == comment_data
-
-    def test_if_admin_edit_comment_on_public_post_return_200(self, user_data, edit_comment, comment_data):
-        user = user_data(True)
-
-        response = edit_comment(user, is_published=True, content=comment_data)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data['content'] == comment_data
-
-    def test_if_normal_user_edit_comment_on_private_post_return_403(self, user_data, create_comment, edit_comment, comment_data):
-        user = user_data(False)
-        admin = user_data(True)
-        comment_response = create_comment(admin, is_published=False, content=comment_data)
-
-        data = comment_response.data
-        comment_id = data['pk']
-        post_id = data['post']
-
-        response = edit_comment(user, comment_id=comment_id, post_id=post_id, content = comment_data, is_published=False)
-
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    def test_if_normal_user_edit_comment_on_public_post_return_200(self, user_data, edit_comment, comment_data):
-        user = user_data(False)
-
-        response = edit_comment(user, content = comment_data, is_published=True)
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data['content'] == comment_data
-
-    def test_if_user_edit_comment_they_do_not_own_return_403(self, user_data, create_comment, edit_comment):
-        owner = user_data(is_staff=False)
-        other_user = user_data(is_staff=False)
-        comment = create_comment(owner, is_published=True)
-        comment_id = comment.data['pk']
-        post_id = comment.data['post']
-
-        response = edit_comment(other_user, post_id=post_id, comment_id=comment_id)
-
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    def test_if_admin_delete_comment_on_private_post_return_200(self, user_data, delete_comment):
-        user = user_data(True)
-
-        response = delete_comment(user, is_published=False)
-
-        assert response.status_code == status.HTTP_204_NO_CONTENT
-
-    def test_if_admin_delete_comment_on_public_post_return_200(self, user_data, delete_comment):
-        user = user_data(True)
-
-        response = delete_comment(user, is_published=True)
-
-        assert response.status_code == status.HTTP_204_NO_CONTENT
-
-    def test_if_normal_user_delete_comment_on_private_post_return_403(self, user_data, create_comment, delete_comment):
-        user = user_data(False)
-        admin = user_data(True)
-
-        create_response = create_comment(admin, is_published=False)
-        data = create_response.data
-        comment_id = data['pk']
-        post_id = data['post']
-
-        response = delete_comment(user, post_id=post_id, comment_id=comment_id, is_published=False)
-
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    def test_if_normal_user_delete_comment_on_public_post_return_403(self, user_data, create_comment, delete_comment):
-        user = user_data(False)
-        admin = user_data(True)
-
-        create_response = create_comment(admin, is_published=True)
-        data = create_response.data
-        comment_id = data['pk']
-        post_id = data['post']
-
-        response = delete_comment(user, post_id=post_id, comment_id=comment_id, is_published=True)
-
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-
+        assert response.status_code == status_code
