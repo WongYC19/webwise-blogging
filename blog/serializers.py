@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
+from django.core.validators import MinLengthValidator
+
 from rest_framework import status
+from rest_framework import serializers
 
 from .models import Post, Comment, Profile
 from likes.models import Like
@@ -14,17 +16,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
-    likes = serializers.IntegerField(read_only=True)
+    likes = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Comment
         fields = ['pk', 'user', 'post', 'content', 'created_date', 'modified_date', 'likes']
         read_only_fields = ["pk", "post", 'likes', 'created_date', 'modified_date', 'user']
 
+    def get_likes(self, instance):
+        likes_count = Like.objects.get_likes_count(instance, instance.pk)
+        return likes_count
+
     def create(self, validated_data):
         user = self.context['request'].user
-        post_id = self.context['post_pk']
         content = validated_data['content']
+        post_id = self.context['post_pk']
 
         if user.is_anonymous:
             res = serializers.ValidationError("Please get the authentication before making comment to a post.")
@@ -56,6 +62,8 @@ class CommentSerializer(serializers.ModelSerializer):
         return instance
 
 class PostSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(validators=[MinLengthValidator(3, message="Please input at least 3 characters for title.")])
+    content = serializers.CharField(validators=[MinLengthValidator(3, message="Please input at least 3 characters for content.")])
     likes = serializers.SerializerMethodField()
     comments = serializers.SerializerMethodField()
 

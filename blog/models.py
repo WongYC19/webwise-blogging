@@ -11,7 +11,7 @@ User = get_user_model()
 class Post(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     author = models.ForeignKey(User, on_delete=models.PROTECT, related_name='posts')
-    title = models.CharField(max_length=200, null=False)
+    title = models.CharField(max_length=200, null=False, blank=False)
     slug = models.SlugField(unique=True, editable=False, max_length=255)
     content = models.TextField(null=False, blank=False)
     created_date = models.DateTimeField(auto_now_add=True, editable=False)
