@@ -16,6 +16,10 @@ __pycache__/
 static/
 .env
 
+# Docker stuff
+Dockerfile
+docker-compose.yml
+
 # Sphinx documentation
 docs/_build/
 
