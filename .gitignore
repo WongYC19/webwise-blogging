@@ -14,6 +14,7 @@ __pycache__/
 *.log
 *.pot
 static/
+.env
 
 # Sphinx documentation
 docs/_build/
