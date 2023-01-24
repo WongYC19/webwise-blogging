@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
-
+from django.core.validators import EmailValidator, validate_email
 # Create your models here.
 class UserManager(BaseUserManager):
 
@@ -42,7 +42,8 @@ class User(AbstractUser):
     username = None
     first_name = None
     last_name = None
-    email = models.EmailField(_("email address"), unique=True)
+
+    email = models.EmailField(_("email address"), unique=True, blank=False, null=False, validators=[validate_email])
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

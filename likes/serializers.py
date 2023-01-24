@@ -1,12 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
-from rest_framework import status
 
 from .models import Like
-class CustomValidationError(serializers.ValidationError):
-    def __init__(self, *args, **kwargs):
-        kwargs['status_code'] = 404
-        super().__init__(*args, **kwargs)
 class LikeSerializer(serializers.ModelSerializer):
 
     content_type = serializers.CharField(max_length=255)

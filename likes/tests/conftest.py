@@ -96,11 +96,3 @@ def get_likes(authenticate):
         return response
 
     return _get_likes
-
-@pytest.fixture
-def like_data():
-    user = User.objects.create_user(username='testuser', password='testpassword')
-    other_user = User.objects.create_user(username='otheruser', password='otherpassword')
-    comment = Comment.objects.create(text='Test Comment')
-    like = Like.objects.create(user=other_user, content_object=comment)
-    return user,like
