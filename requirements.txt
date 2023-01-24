@@ -29,7 +29,7 @@ drf-yasg==1.21.4
 exceptiongroup==1.1.0
 Faker==16.4.0
 flake8==6.0.0
-future==0.16.0
+future>=0.18.3
 gunicorn==20.1.0
 idna==3.4
 inflection==0.5.1
