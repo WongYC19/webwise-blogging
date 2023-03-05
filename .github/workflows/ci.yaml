@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: "${{ matrix.os }}"
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]
@@ -19,7 +19,7 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }} with Poetry
         uses: poetry/actions/setup-poetry@v1
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "${{ matrix.python-version }}"
 
       - name: Install dependencies
         run: |
@@ -34,5 +34,5 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
+          files: ./coverage/coverage.xml
           flags: unittests
