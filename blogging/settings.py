@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+# import os
 from pathlib import Path
 from datetime import timedelta
 
@@ -28,8 +29,8 @@ SECRET_KEY = env.str('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=True)
+DEBUG = True
 
-ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS')
 
 # Application definition
 
@@ -43,6 +44,8 @@ INSTALLED_APPS = [
 
     # Installed application
     'rest_framework',
+    'rest_framework.authtoken',
+    'django_filters',
     'djoser',
     'drf_yasg',
 
@@ -53,23 +56,38 @@ INSTALLED_APPS = [
     'likes',
 ]
 
-if DEBUG:
-    INSTALLED_APPS += ["debug_toolbar"]
-
 MIDDLEWARE = [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+if DEBUG:
+    INSTALLED_APPS += ["debug_toolbar"]
+    MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware",)
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False
+    ALLOWED_HOSTS = []
+
+else:
+    CSRF_COOKIE_SECURE = True
+    CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=['http://127.0.0.1', 'http://localhost'])
+
+    SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=30)
+    # SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
+    SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=True)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True)
+    SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=True)
+
+    ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS')
+
 ROOT_URLCONF = 'blogging.urls'
-CSRF_COOKIE_SECURE = True
 
 TEMPLATES = [
     {
@@ -91,21 +109,33 @@ WSGI_APPLICATION = 'blogging.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
 DATABASES = {
      # read os.environ['DATABASE_URL']
-     'default': env.db(),
+    #  'default': env.db_url("DATABASE_URL"),
 
      # read os.environ['SQLITE_URL']
     #  'extra': env.db_url('SQLITE_URL')
 
-    # 'default': {
-    #     'ENGINE': os.getenv('WEBWISE_DB_ENGINE'),
-    #     'NAME': os.getenv('WEBWISE_DB_NAME'),
-    #     'USER': os.getenv('WEBWISE_DB_USER'),
-    #     'PASSWORD': os.getenv('WEBWISE_DB_PASSWORD'),
-    #     'HOST':os.getenv('WEBWISE_DB_HOST'),
-    #     'PORT': os.getenv('WEBWISE_DB_PORT'),
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DB_NAME_WEBWISE'),
+        'USER': env('DB_USER_WEBWISE'),
+        'PASSWORD': env('DB_PASSWORD_WEBWISE'),
+        'HOST':env('DB_HOST_WEBWISE'),
+        'PORT': env('DB_PORT_WEBWISE'),
+        'DISABLE_SERVER_SIDE_CURSORS': True,
+    },
+
+    # 'test': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'test_webwisedb',
+    #     'USER': 'postgres',
+    #     'PASSWORD': 'password',
+    #     'HOST': 'localhost',
+    #     'PORT': '5432',
+    #     'TEST': {
+    #         'NAME': 'test_webwisedb',
+    #     },
     # }
 }
 
@@ -139,7 +169,7 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_L10N = True
+# USE_L10N = True
 
 USE_TZ = True
 
@@ -155,7 +185,6 @@ STATIC_ROOT = BASE_DIR / env.str("STATIC_ROOT", default="static")
 
 # forever-cacheable files and compression support
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
 
 MEDIA_URL = env.str("MEDIA_URL", default="media/")
 
@@ -176,7 +205,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
         # 'rest_framework.permissions.AllowAny'
-    ]
+    ],
+
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
 }
 
 SIMPLE_JWT = {
@@ -209,27 +242,40 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+
+    # custom
+    'ACCESS_COOKIE_KEY': 'access_token',
+    'REFRESH_COOKIE_KEY': 'refresh_token',  # Cookie name. Enables cookies if value is set.
+    'AUTH_COOKIE_DOMAIN': None,     # A string like "example.com", or None for standard domain cookie.
+    'AUTH_COOKIE_SECURE': True,    # Whether the auth cookies should be secure (https:// only).
+    'AUTH_COOKIE_HTTP_ONLY' : True, # Http only cookie flag.It's not fetch by javascript.
+    'AUTH_COOKIE_PATH': '/',        # The path of the auth cookie.
+    'AUTH_COOKIE_SAMESITE': 'strict',  # Whether to set the flag restricting cookie leaks on cross-site requests. This can be 'Lax', 'Strict', or None to disable the flag.
 }
 
 DJOSER = {
-    'activation': 'djoser.serializers.ActivationSerializer',
-    'password_reset': 'djoser.serializers.SendEmailResetSerializer',
-    'password_reset_confirm': 'djoser.serializers.PasswordResetConfirmSerializer',
-    'password_reset_confirm_retype': 'djoser.serializers.PasswordResetConfirmRetypeSerializer',
-    'set_password': 'djoser.serializers.SetPasswordSerializer',
-    'set_password_retype': 'djoser.serializers.SetPasswordRetypeSerializer',
-    'set_username': 'djoser.serializers.SetUsernameSerializer',
-    'set_username_retype': 'djoser.serializers.SetUsernameRetypeSerializer',
-    'username_reset': 'djoser.serializers.SendEmailResetSerializer',
-    'username_reset_confirm': 'djoser.serializers.UsernameResetConfirmSerializer',
-    'username_reset_confirm_retype': 'djoser.serializers.UsernameResetConfirmRetypeSerializer',
-    'user_create': 'djoser.serializers.UserCreateSerializer',
-    'user_create_password_retype': 'djoser.serializers.UserCreatePasswordRetypeSerializer',
-    'user_delete': 'djoser.serializers.UserDeleteSerializer',
-    'user': 'djoser.serializers.UserSerializer',
-    'current_user': 'djoser.serializers.UserSerializer',
-    'token': 'djoser.serializers.TokenSerializer',
-    'token_create': 'djoser.serializers.TokenCreateSerializer',
+    # 'TOKEN_MODEL': 'django.contrib.auth.models.Token',
+    'serializers': {
+        'activation': 'djoser.serializers.ActivationSerializer',
+        'password_reset': 'djoser.serializers.SendEmailResetSerializer',
+        'password_reset_confirm': 'djoser.serializers.PasswordResetConfirmSerializer',
+        'password_reset_confirm_retype': 'djoser.serializers.PasswordResetConfirmRetypeSerializer',
+        'set_password': 'djoser.serializers.SetPasswordSerializer',
+        'set_password_retype': 'djoser.serializers.SetPasswordRetypeSerializer',
+        'set_username': 'djoser.serializers.SetUsernameSerializer',
+        'set_username_retype': 'djoser.serializers.SetUsernameRetypeSerializer',
+        'username_reset': 'djoser.serializers.SendEmailResetSerializer',
+        'username_reset_confirm': 'djoser.serializers.UsernameResetConfirmSerializer',
+        'username_reset_confirm_retype': 'djoser.serializers.UsernameResetConfirmRetypeSerializer',
+        'user_create': 'djoser.serializers.UserCreateSerializer',
+        'user_create_password_retype': 'djoser.serializers.UserCreatePasswordRetypeSerializer',
+        'user_delete': 'djoser.serializers.UserDeleteSerializer',
+        'user': 'djoser.serializers.UserSerializer',
+        'current_user': 'djoser.serializers.UserSerializer',
+        'token': 'djoser.serializers.TokenSerializer',
+        'token_create': 'djoser.serializers.TokenCreateSerializer',
+    }
+
 }
 
 SWAGGER_SETTINGS = {
@@ -241,7 +287,6 @@ SWAGGER_SETTINGS = {
     # Remove the django login and logout button from swagger documentation
     'USE_SESSION_AUTH': False,
 
-
     'SECURITY_DEFINITIONS': {
         'api_key': {
             "type": "apiKey",
@@ -251,7 +296,4 @@ SWAGGER_SETTINGS = {
             "bearerFormat": "JWT",
         },
     },
-
-
-
 }

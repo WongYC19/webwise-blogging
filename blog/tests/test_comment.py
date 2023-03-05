@@ -65,18 +65,3 @@ class TestComment:
         response = read_comments(user_type, post.pk)
 
         assert response.status_code == status_code
-
-    @pytest.mark.parametrize("user_type, post_type, status_code", [
-        ("superuser", "private", 200),
-        ("normal_user", "private", 403),
-        ("anonymous_user", "private", 401),
-        ("superuser", "public", 200),
-        ("normal_user", "public", 200),
-        ("anonymous_user", "public", 401),
-    ])
-    def test_if_user_read_comment_on_post(self, read_comments, posts, user_type, post_type, status_code):
-        post = posts[post_type]
-
-        response = read_comments(user_type, post.pk)
-
-        assert response.status_code == status_code
