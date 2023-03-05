@@ -26,17 +26,12 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install
+                
+      - name: Load environment variables from .env
+        uses: jdotenv/action-jdotenv@v1
+        with:
+          dotenv_path: .env
       
-      - name: Load environment variables from .env
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-          
-      - name: Load environment variables from .env
-        uses: tecnativa/action-environment@v1
-        with:
-          environment_file: .env
-          
       - name: Run tests with coverage
         run: poetry run pytest --cov=. --cov-report=xml tests/
 
