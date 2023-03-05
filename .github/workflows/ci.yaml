@@ -27,8 +27,21 @@ jobs:
         run: |
           poetry install
                     
-      - name: Output environment variables to .env file
-        run: |
+      - name: Output environment variables to .env file        
+        env:
+          DJANGO_ALLOWED_HOSTS: "${{ secrets.DJANGO_ALLOWED_HOSTS }}"
+          CSRF_TRUSTED_ORIGINS: "${{ secrets.CSRF_TRUSTED_ORIGINS }}"
+          SECURE_HSTS_SECONDS: "${{ secrets.SECURE_HSTS_SECONDS }}"
+          SECURE_SSL_REDIRECT: "${{ secrets.SECURE_SSL_REDIRECT }}"
+          SESSION_COOKIE_SECURE: "${{ secrets.SESSION_COOKIE_SECURE }}"
+          SECURE_HSTS_INCLUDE_SUBDOMAINS: "${{ secrets.SECURE_HSTS_INCLUDE_SUBDOMAINS }}"
+          SECURE_HSTS_PRELOAD: "${{ secrets.SECURE_HSTS_PRELOAD }}"
+          DB_NAME_WEBWISE: "${{ secrets.DB_NAME_WEBWISE }}"
+          DB_USER_WEBWISE: "${{ secrets.DB_USER_WEBWISE }}"
+          DB_PASSWORD_WEBWISE: "${{ secrets.DB_PASSWORD_WEBWISE }}"
+          DB_HOST_WEBWISE: "${{ secrets.DB_HOST_WEBWISE }}"
+          DB_PORT_WEBWISE: "${{ secrets.DB_PORT_WEBWISE }}"
+        run: |                  
           echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
           echo "DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }}" >> .env
           echo "CSRF_TRUSTED_ORIGINS=${{ secrets.CSRF_TRUSTED_ORIGINS }}" >> .env
