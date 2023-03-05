@@ -17,35 +17,21 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # - name: Set up Python ${{ matrix.python-version }} with Poetry
-      #   uses: poetry/actions/setup-poetry@v1
-      #   with:
-      #     python-version: "${{ matrix.python-version }}"
-
-      # - name: Setup Poetry
-      #   uses: poetry/actions/setup@v1
-      #   with:
-      #     virtualenv-name: env
-      #     python-version: 3.9
       - name: Set up Python ${{ matrix.python-version }} with Poetry
-        uses: docker://python:${{ matrix.python-version }}-slim
-        run: |
-          pip install --upgrade pip
-          pip install poetry
-          poetry config virtualenvs.create false
+         run: |
+          docker pull python:${{ matrix.python-version }}-slim
+          docker run -v $PWD:/app -w /app python:${{ matrix.python-version }}-slim sh -c "pip install --upgrade pip && pip install poetry && poetry config virtualenvs.create false"
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install poetry
           poetry install
 
       - name: Run tests with coverage
-        run: poetry --cov=. --cov-report=xml tests/
+        run: poetry run pytest --cov=. --cov-report=xml
 
       - name: Upload coverage report to Codecov
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/coverage.xml
+          files: ./coverage.xml
           flags: unittests
