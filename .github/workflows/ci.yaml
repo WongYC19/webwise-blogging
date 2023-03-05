@@ -8,23 +8,25 @@ on:
 
 jobs:
   test:
-    runs-on: "${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]
         python-version: [3.8, 3.9]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }} with Poetry
         run: |
+          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            poetry_install_command="poetry install"
+          else
             docker pull python:${{ matrix.python-version }}-slim
             docker run -e CI=true -v ${{ github.workspace }}:/app -w /app python:${{ matrix.python-version }}-slim bash -c "pip install --upgrade pip && pip install poetry && poetry config virtualenvs.create false"
-
-      - name: Install dependencies
-        run: |
-          poetry install
+            poetry_install_command="poetry install --no-root"
+          fi
+          $poetry_install_command
 
       - name: Run tests with coverage
         run: poetry run pytest --cov=. --cov-report=xml tests/
