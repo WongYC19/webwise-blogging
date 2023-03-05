@@ -41,7 +41,7 @@ env.ENVIRON_VARIABLES = [
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env.str('SECRET_KEY')
+SECRET_KEY = env.str('SECRET_KEY', default="k)e8cm=n2dg*j9#te%%obahu27n*6)z1*c#_7hk*y*8a4wygio")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=True)
