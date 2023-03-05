@@ -19,6 +19,7 @@ class TagViewSet(ListCreateAPIView, ViewSet):
     filterset_fields = ['label']
     ordering_fields = ['label']
     ordering = ['label']
+
 class TaggedItemViewSet(ListCreateAPIView, DestroyAPIView, RetrieveAPIView, ViewSet):
     """ Allow user to create/read list and details/update and delete the relationship of tag and tagged item """
     # The ordering by "tag" causes duplication in list viewset, for postgres it has to include 'id' to use the distinct method (Source: ChatGPT)
