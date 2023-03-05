@@ -6,6 +6,21 @@ on:
   pull_request:
     branches: [master]
 
+services:
+  db:
+    image: postgres
+    env:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432/tcp
+    options: >-
+      --health-cmd pg_isready
+      --health-interval 10s
+      --health-timeout 5s
+      --health-retries 5
+
 jobs:
   test:
     runs-on: "${{ matrix.os }}"
@@ -22,6 +37,12 @@ jobs:
 
       - name: Run image
         uses: abatilo/actions-poetry@v2
+
+      - name: Build and run Docker PostgreSQL container
+        run: docker run --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres
+
+      - name: Wait for PostgreSQL container to start
+        run: docker ps -a && sleep 10
 
       - name: Install dependencies
         run: |
@@ -60,6 +81,9 @@ jobs:
 
       - name: Run tests with coverage
         run: poetry run pytest --cov=. --cov-report=xml
+
+      - name: Stop Docker PostgreSQL container
+        run: docker stop postgres && docker rm postgres
 
       - name: Upload coverage report to Codecov
         uses: codecov/codecov-action@v3
