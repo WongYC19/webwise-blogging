@@ -30,6 +30,7 @@ jobs:
       - name: Output environment variables to .env file
         env:
           SECRET_KEY: "${{ secrets.SECRET_KEY }}"
+          DATABASE_URL: sqlite:///db.sqlite3
           DJANGO_ALLOWED_HOSTS: "${{ secrets.DJANGO_ALLOWED_HOSTS }}"
           CSRF_TRUSTED_ORIGINS: "${{ secrets.CSRF_TRUSTED_ORIGINS }}"
           SECURE_HSTS_SECONDS: "${{ secrets.SECURE_HSTS_SECONDS }}"

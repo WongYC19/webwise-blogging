@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-# import os
+import sys
 from pathlib import Path
 from datetime import timedelta
 
@@ -36,7 +36,7 @@ env.ENVIRON_VARIABLES = [
     "DB_HOST_WEBWISE",
     "DB_PORT_WEBWISE",
 ]
-
+print(env.ENVIRON)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -140,19 +140,14 @@ DATABASES = {
         'DISABLE_SERVER_SIDE_CURSORS': True,
     },
 
-    # 'test': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'test_webwisedb',
-    #     'USER': 'postgres',
-    #     'PASSWORD': 'password',
-    #     'HOST': 'localhost',
-    #     'PORT': '5432',
-    #     'TEST': {
-    #         'NAME': 'test_webwisedb',
-    #     },
-    # }
+    'test': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
+if 'test' in sys.argv or 'test_coverage' in sys.argv: #Covers regular testing and django-coverage
+    DATABASES['default'] = DATABASES['test']
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
