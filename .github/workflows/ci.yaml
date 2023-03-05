@@ -47,7 +47,7 @@ jobs:
           DB_PASSWORD_WEBWISE: ${{ secrets.DB_PASSWORD_WEBWISE }}
           DB_HOST_WEBWISE: ${{ secrets.DB_HOST_WEBWISE }}
           DB_PORT_WEBWISE: ${{ secrets.DB_PORT_WEBWISE }}
-        run: poetry run pytest --cov=. --cov-report=xml tests/
+        run: poetry run pytest --cov=. --cov-report=xml
 
       - name: Upload coverage report to Codecov
         uses: codecov/codecov-action@v3
