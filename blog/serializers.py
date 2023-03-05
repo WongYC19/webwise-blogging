@@ -7,6 +7,9 @@ from rest_framework import serializers
 from .models import Post, Comment, Profile
 from likes.models import Like
 
+from tags.models import TaggedItem
+from tags.serializers import TaggedItemSerializer
+
 User = get_user_model()
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -64,12 +67,15 @@ class CommentSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     title = serializers.CharField(validators=[MinLengthValidator(3, message="Please input at least 3 characters for title.")])
     content = serializers.CharField(validators=[MinLengthValidator(3, message="Please input at least 3 characters for content.")])
-    likes = serializers.SerializerMethodField()
+    # tags = TaggedItemSerializer(many=True, read_only=True)
+    tags = serializers.SerializerMethodField()
     comments = serializers.SerializerMethodField()
+    likes = serializers.SerializerMethodField()
 
-    def get_likes(self, instance):
-        likes_count = Like.objects.get_likes_count(instance, instance.pk)
-        return likes_count
+    def get_tags(self, instance):
+        tagged_item = TaggedItem.objects.get_tags_for(instance, instance.pk)
+        serializer = TaggedItemSerializer(tagged_item)
+        return serializer.data.get('tag', [])
 
     def get_comments(self, instance):
         view = self.context.get('view')
@@ -77,11 +83,19 @@ class PostSerializer(serializers.ModelSerializer):
             serializer = CommentSerializer(instance.comments.all(), many=True, read_only=True)
             return serializer.data
         return None
-    class Meta:
-        model = Post
-        fields = ['pk', 'author', 'title', 'content', 'created_date', 'modified_date', 'is_published', 'likes', 'comments']
-        read_only_fields = ['pk', 'author', 'created_date', 'modified_date', 'likes', 'comments']
+
+    def get_likes(self, instance):
+        likes_count = Like.objects.get_likes_count(instance, instance.pk)
+        return likes_count
 
     def validate(self, attrs):
+    #     # super().validate(attrs)
         attrs['author'] = self.context['request'].user
         return attrs
+
+    class Meta:
+        model = Post
+        fields = ['pk', 'author', 'title', 'content', 'created_date', 'modified_date', 'is_published', 'tags', 'comments', 'likes',]
+        read_only_fields = ['pk', 'author', 'created_date', 'modified_date', 'comments', 'likes',]
+
+

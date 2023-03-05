@@ -1,7 +1,5 @@
 import pytest
-from rest_framework import status
-from model_bakery import baker
-
+from blog.models import Post
 @pytest.mark.django_db(transaction=False)
 class TestPost:
 
@@ -52,17 +50,20 @@ class TestPost:
 
         assert response.status_code == status_code
 
-    @pytest.mark.parametrize("user_type, status_code, size", [
-        ('superuser', 200, 2),
-        ('normal_user', 200, 1),
-        ('anonymous_user', 200, 1),
+    @pytest.mark.parametrize("user_type, status_code", [
+        ('superuser', 200),
+        ('normal_user', 200),
+        ('anonymous_user', 200),
     ])
-    def test_if_user_list_posts(self, get_posts, user_type, status_code, size):
+    def test_if_user_list_posts(self, get_posts, user_type, status_code):
         response = get_posts(user_type)
 
         assert response.status_code == status_code
-        print(response.json())
-        assert len(response.data) == size
+
+        if user_type == 'superuser':
+            assert len(response.data['results']) == Post.objects.count()
+        else:
+            assert len(response.data['results']) == Post.objects.filter(is_published=True).count()
 
     @pytest.mark.parametrize("user_type, status_code, post_type", [
         ('superuser', 200, 'private'),

@@ -24,10 +24,12 @@ from drf_yasg import openapi
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('blog/', include('blog.urls')),
-    path('like/', include('likes.urls')),
-    path(r'auth/', include('djoser.urls')),
-    path(r'auth/', include('djoser.urls.jwt')),
+    path('api/blog/', include('blog.urls')),
+    path('api/like/', include('likes.urls')),
+    path('api/tag/', include('tags.urls')),
+    path(r"api/auth/", include("base.urls")),
+    path(r'api/auth/', include('djoser.urls')),
+    path(r'api/auth/', include('djoser.urls.jwt')),
     path('__debug__/', include('debug_toolbar.urls')),
 ]
 
@@ -36,7 +38,7 @@ urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="WebWise Blogging API",
+      title="WiseBlog API",
       default_version='v1',
       description="Provides the set of function to support blog posts, comments, likes and taggings.",
       terms_of_service="https://www.google.com/policies/terms/",
@@ -48,8 +50,8 @@ schema_view = get_schema_view(
 )
 
 urlpatterns += [
-   re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-   re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+   re_path(r'^api(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+   re_path(r'^api/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     # path('swagger/', CustomSecuritySchemaView.as_view(), name='schema-json'),
    re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
