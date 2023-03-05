@@ -26,13 +26,27 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install
-                
-      - name: Load environment variables from .env
-        uses: jdotenv/action-jdotenv@v1
-        with:
-          dotenv_path: .env
-      
+            
       - name: Run tests with coverage
+        env:        
+          STATIC_URL: ${{ secrets.STATIC_URL }}
+          MEDIA_URL: ${{ secrets.MEDIA_URL }}
+          STATIC_ROOT: ${{ secrets.STATIC_ROOT }}          
+          
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DJANGO_ALLOWED_HOSTS: ${{ secrets.DJANGO_ALLOWED_HOSTS }}
+          CSRF_TRUSTED_ORIGINS: ${{ secrets.CSRF_TRUSTED_ORIGINS }}
+          SECURE_HSTS_SECONDS: ${{ secrets.SECURE_HSTS_SECONDS }}
+          SECURE_SSL_REDIRECT: ${{ secrets.SECURE_SSL_REDIRECT }}
+          SESSION_COOKIE_SECURE: ${{ secrets.SESSION_COOKIE_SECURE }}
+          SECURE_HSTS_INCLUDE_SUBDOMAINS: ${{ secrets.SECURE_HSTS_INCLUDE_SUBDOMAINS }}
+          SECURE_HSTS_PRELOAD: ${{ secrets.SECURE_HSTS_PRELOAD }}                
+          
+          DB_NAME_WEBWISE: ${{ secrets.DB_NAME_WEBWISE }}
+          DB_USER_WEBWISE: ${{ secrets.DB_USER_WEBWISE }}
+          DB_PASSWORD_WEBWISE: ${{ secrets.DB_PASSWORD_WEBWISE }}
+          DB_HOST_WEBWISE: ${{ secrets.DB_HOST_WEBWISE }}
+          DB_PORT_WEBWISE: ${{ secrets.DB_PORT_WEBWISE }}
         run: poetry run pytest --cov=. --cov-report=xml tests/
 
       - name: Upload coverage report to Codecov
