@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-        python-version: [3.8]
+        python-version: [3.9]
 
     steps:
       - uses: actions/checkout@v3
@@ -27,8 +27,37 @@ jobs:
         run: |
           poetry install
 
+      - name: Output environment variables to .env file
+        env:
+          DJANGO_ALLOWED_HOSTS: "${{ secrets.DJANGO_ALLOWED_HOSTS }}"
+          CSRF_TRUSTED_ORIGINS: "${{ secrets.CSRF_TRUSTED_ORIGINS }}"
+          SECURE_HSTS_SECONDS: "${{ secrets.SECURE_HSTS_SECONDS }}"
+          SECURE_SSL_REDIRECT: "${{ secrets.SECURE_SSL_REDIRECT }}"
+          SESSION_COOKIE_SECURE: "${{ secrets.SESSION_COOKIE_SECURE }}"
+          SECURE_HSTS_INCLUDE_SUBDOMAINS: "${{ secrets.SECURE_HSTS_INCLUDE_SUBDOMAINS }}"
+          SECURE_HSTS_PRELOAD: "${{ secrets.SECURE_HSTS_PRELOAD }}"
+          DB_NAME_WEBWISE: "${{ secrets.DB_NAME_WEBWISE }}"
+          DB_USER_WEBWISE: "${{ secrets.DB_USER_WEBWISE }}"
+          DB_PASSWORD_WEBWISE: "${{ secrets.DB_PASSWORD_WEBWISE }}"
+          DB_HOST_WEBWISE: "${{ secrets.DB_HOST_WEBWISE }}"
+          DB_PORT_WEBWISE: "${{ secrets.DB_PORT_WEBWISE }}"
+        run: |
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "DJANGO_ALLOWED_HOSTS=${{ secrets.DJANGO_ALLOWED_HOSTS }}" >> .env
+          echo "CSRF_TRUSTED_ORIGINS=${{ secrets.CSRF_TRUSTED_ORIGINS }}" >> .env
+          echo "SECURE_HSTS_SECONDS=${{ secrets.SECURE_HSTS_SECONDS }}" >> .env
+          echo "SECURE_SSL_REDIRECT=${{ secrets.SECURE_SSL_REDIRECT }}" >> .env
+          echo "SESSION_COOKIE_SECURE=${{ secrets.SESSION_COOKIE_SECURE }}" >> .env
+          echo "SECURE_HSTS_INCLUDE_SUBDOMAINS=${{ secrets.SECURE_HSTS_INCLUDE_SUBDOMAINS }}" >> .env
+          echo "SECURE_HSTS_PRELOAD=${{ secrets.SECURE_HSTS_PRELOAD }}" >> .env
+          echo "DB_NAME_WEBWISE=${{ secrets.DB_NAME_WEBWISE }}" >> .env
+          echo "DB_USER_WEBWISE=${{ secrets.DB_USER_WEBWISE }}" >> .env
+          echo "DB_PASSWORD_WEBWISE=${{ secrets.DB_PASSWORD_WEBWISE }}" >> .env
+          echo "DB_HOST_WEBWISE=${{ secrets.DB_HOST_WEBWISE }}" >> .env
+          echo "DB_PORT_WEBWISE=${{ secrets.DB_PORT_WEBWISE }}" >> .env
+
       - name: Run tests with coverage
-        run: poetry run pytest --cov=. --cov-report=xml tests/
+        run: poetry run pytest --cov=. --cov-report=xml
 
       - name: Upload coverage report to Codecov
         uses: codecov/codecov-action@v3
