@@ -15,10 +15,10 @@ jobs:
         python-version: [3.8, 3.9]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }} with Poetry
-        run: |
+         run: |
             docker pull python:${{ matrix.python-version }}-slim
             docker run -e CI=true -v ${{ github.workspace }}:/app -w /app python:${{ matrix.python-version }}-slim bash -c "pip install --upgrade pip && pip install poetry && poetry config virtualenvs.create false"
 
