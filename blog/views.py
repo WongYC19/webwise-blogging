@@ -1,10 +1,14 @@
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.permissions import IsAdminUser, AllowAny, IsAuthenticated
+from rest_framework.filters import OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Profile, Post, Comment
 from .serializers import UserProfileSerializer, PostSerializer, CommentSerializer
 from .permissions import IsAdminOrProfileOwner, CommentPermission
+from .filters import PostFilter
+from .paginations import PostPagination, CommentPagination
 
 # Create your views here.
 class UserProfileViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
@@ -24,6 +28,16 @@ class PostViewSet(ModelViewSet):
     http_method_names = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options']
     serializer_class = PostSerializer
     permission_classes = [IsAdminUser]
+    filtering_backends = [OrderingFilter]
+
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_class = PostFilter
+
+    ordering_fields = ['modified_date', 'likes', 'author']
+    ordering = ['-modified_date', 'author']
+
+    search_fields = ['title']
+    pagination_class = PostPagination
 
     def get_queryset(self):
         user = self.request.user
@@ -41,9 +55,13 @@ class PostViewSet(ModelViewSet):
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated & CommentPermission]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = ['user']
+    ordering_fields = ['created_date', 'user']
+    ordering = ['-created_date']
+    pagination_class = CommentPagination
 
     def get_queryset(self):
-        print(self.kwargs)
         post_id = self.kwargs.get('post_pk')
         user = self.request.user
 
@@ -56,9 +74,3 @@ class CommentViewSet(ModelViewSet):
         context = super().get_serializer_context()
         context.update(self.kwargs)
         return context
-
-    # def get_permissions(self):
-    #     if self.action in ['create', 'update', 'partial_update', 'destroy']:
-    #         # ? Only Admin or authenticated comment owner can update/delete comments
-    #         return [IsAdminOrCommentOwner()]
-    #     return [IsAuthenticated()]
