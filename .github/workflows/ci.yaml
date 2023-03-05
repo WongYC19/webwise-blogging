@@ -6,21 +6,6 @@ on:
   pull_request:
     branches: [master]
 
-services:
-  db:
-    image: postgres
-    env:
-      POSTGRES_DB: test_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - 5432/tcp
-    options: >-
-      --health-cmd pg_isready
-      --health-interval 10s
-      --health-timeout 5s
-      --health-retries 5
-
 jobs:
   test:
     runs-on: "${{ matrix.os }}"
@@ -29,8 +14,27 @@ jobs:
         os: [windows-latest]
         python-version: [3.9]
 
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_NAME: testdb
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out repository
+        uses: actions/checkout@v3
+
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
