@@ -22,6 +22,7 @@ environ.Env.read_env(BASE_DIR / ".env")
 
 # explicitly specify the environment variables to use as fallbacks
 env.ENVIRON_VARIABLES = [
+    "SECRET_KEY",
     "DJANGO_ALLOWED_HOSTS",
     "CSRF_TRUSTED_ORIGINS",
     "SECURE_HSTS_SECONDS",
