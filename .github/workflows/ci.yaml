@@ -11,27 +11,28 @@ jobs:
     runs-on: "${{ matrix.os }}"
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest]
-        python-version: [3.8, 3.9]
+        os: [windows-latest]
+        python-version: [3.9.5]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-      - name: Set up Python ${{ matrix.python-version }} with Poetry
-         run: |
-          docker pull python:${{ matrix.python-version }}-slim
-          docker run -v $PWD:/app -w /app python:${{ matrix.python-version }}-slim sh -c "pip install --upgrade pip && pip install poetry && poetry config virtualenvs.create false"
+      - name: Run image
+        uses: abatilo/actions-poetry@v2
 
       - name: Install dependencies
         run: |
           poetry install
 
       - name: Run tests with coverage
-        run: poetry run pytest --cov=. --cov-report=xml
+        run: poetry run pytest --cov=. --cov-report=xml tests/
 
       - name: Upload coverage report to Codecov
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
+          files: ./coverage/coverage.xml
           flags: unittests
